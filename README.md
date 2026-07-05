@@ -1,76 +1,120 @@
 # BayarKita
 
-## Nama Aplikasi
+BayarKita merupakan aplikasi simulasi pembayaran digital berbasis web yang dibuat sebagai media pembelajaran sekaligus implementasi konsep frontend menggunakan HTML, React (CDN), dan Tailwind CSS. Aplikasi ini menyediakan simulasi beberapa layanan pembayaran seperti PLN, PDAM, Internet, Pulsa, dan SPP dengan tampilan yang mengadopsi konsep mobile banking sehingga lebih nyaman digunakan pada perangkat mobile maupun desktop.
 
-**BayarKita** -- Aplikasi simulasi pembayaran tagihan dan isi ulang
-berbasis web.
+![Home](README-assets/home-dark.png)
 
-## Deskripsi Singkat
+---
 
-BayarKita adalah aplikasi Single Page Application (SPA) yang menampilkan
-simulasi pembayaran tagihan, pembelian pulsa, pembayaran SPP, serta
-riwayat transaksi dengan antarmuka bergaya mobile banking modern
-menggunakan HTML, React (CDN), dan Tailwind CSS.
+## Fitur
 
-## Cara Menjalankan
+Fitur yang tersedia pada aplikasi ini antara lain:
 
-1.  Ekstrak seluruh file proyek (jika masih dalam ZIP).
-2.  Buka file **index.html** menggunakan browser modern seperti Google
-    Chrome, Microsoft Edge, atau Mozilla Firefox.
-3.  Tidak memerlukan proses build maupun instalasi dependency.
+- Pembayaran tagihan PLN
+- Pembayaran tagihan PDAM
+- Pembayaran Internet
+- Pembelian Pulsa
+- Pembayaran SPP
+- Pembayaran menggunakan QRIS
+- Pembayaran melalui Virtual Account (BCA, BNI, dan Mandiri)
+- Pembayaran melalui Teller/Kasir
+- Cetak struk transaksi
+- Download bukti pembayaran dalam format PDF
+- Riwayat transaksi
+- Dark Mode dan Light Mode
+- Tampilan responsif untuk perangkat desktop maupun mobile
 
-## Fitur yang Sudah Diimplementasikan
+---
 
--   Dashboard dengan kartu saldo.
--   Menu cepat pembayaran.
--   Pembelian pulsa.
--   Pembayaran PLN.
--   Pembayaran PDAM.
--   Pembayaran Internet/WiFi.
--   Pembayaran SPP.
--   Riwayat transaksi.
--   Mode terang dan gelap.
--   Bottom navigation bergaya aplikasi mobile.
--   Toast notification.
--   Bottom sheet.
--   Loading & skeleton.
--   Antarmuka responsif untuk berbagai ukuran layar HP.
+## Teknologi yang Digunakan
 
-## Screenshot
+Beberapa teknologi yang digunakan dalam pengembangan aplikasi ini adalah:
 
-### Desktop
+- HTML5
+- React (CDN)
+- Tailwind CSS
+- Lucide Icons
+- html2canvas
+- jsPDF
 
-> Tambahkan screenshot desktop di sini setelah aplikasi dijalankan.
+---
 
-Contoh:
+## Cara Menjalankan Aplikasi
 
-    README-assets/desktop.png
+1. Clone repository ini.
 
-### Mobile
-
-> Tambahkan screenshot mobile di sini setelah aplikasi dijalankan.
-
-Contoh:
-
-    README-assets/mobile.png
-
-## Link Demo
-
-Jika sudah di-deploy, tambahkan salah satu tautan berikut.
-
--   GitHub Pages:
-
-```{=html}
-<!-- -->
+```bash
+git clone https://github.com/sahfiann/bayarkita.git
 ```
-    https://username.github.io/nama-project/
 
--   Netlify:
+2. Masuk ke folder project.
 
-```{=html}
-<!-- -->
+```bash
+cd bayarkita
 ```
-    https://nama-project.netlify.app/
 
-> Apabila belum di-deploy, bagian ini dapat diisi dengan **Belum
-> tersedia**.
+3. Jalankan aplikasi dengan membuka file `index.html` menggunakan browser seperti Google Chrome, Microsoft Edge, atau Mozilla Firefox.
+
+Aplikasi ini tidak memerlukan proses build maupun instalasi dependency sehingga dapat langsung dijalankan.
+
+---
+
+# Tampilan Aplikasi
+
+### Halaman Home
+
+![Home](README-assets/home-dark.png)
+
+### Menu Tagihan
+
+![Tagihan](README-assets/tagihan.png)
+
+### Pembayaran PLN
+
+![PLN](README-assets/pln.png)
+
+### Pilih Metode Pembayaran
+
+![Pembayaran](README-assets/payment-method.png)
+
+### Virtual Account
+
+![Virtual Account](README-assets/virtual-account.png)
+
+### Pembayaran QRIS
+
+![QRIS](README-assets/qris.png)
+
+### Pembayaran Teller
+
+![Teller](README-assets/teller.png)
+
+### Transaksi Berhasil
+
+![Success](README-assets/success.png)
+
+### Riwayat Transaksi
+
+![History](README-assets/history.png)
+
+### Bukti Pembayaran (PDF)
+
+![PDF](README-assets/pdf.png)
+
+---
+
+## Demo
+
+Aplikasi dapat diakses melalui GitHub Pages pada alamat berikut:
+
+https://sahfiann.github.io/bayarkita/
+
+---
+
+## Pengembang
+
+**Sahrul Alfiansyah**
+
+Universitas Pamulang
+
+Tahun 2026

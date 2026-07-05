@@ -2,7 +2,7 @@
 
 BayarKita merupakan aplikasi simulasi pembayaran digital berbasis web yang dibuat sebagai media pembelajaran sekaligus implementasi konsep frontend menggunakan HTML, React (CDN), dan Tailwind CSS. Aplikasi ini menyediakan simulasi beberapa layanan pembayaran seperti PLN, PDAM, Internet, Pulsa, dan SPP dengan tampilan yang mengadopsi konsep mobile banking sehingga lebih nyaman digunakan pada perangkat mobile maupun desktop.
 
-![Home](README-assets/home-dark.png)
+![Home](README-assets/home-dark.jpeg)
 
 ---
 
@@ -53,7 +53,7 @@ git clone https://github.com/sahfiann/bayarkita.git
 cd bayarkita
 ```
 
-3. Jalankan aplikasi dengan membuka file `index.html` menggunakan browser seperti Google Chrome, Microsoft Edge, atau Mozilla Firefox.
+3. Jalankan aplikasi dengan membuka file **index.html** menggunakan browser seperti Google Chrome, Microsoft Edge, atau Mozilla Firefox.
 
 Aplikasi ini tidak memerlukan proses build maupun instalasi dependency sehingga dapat langsung dijalankan.
 
@@ -63,43 +63,43 @@ Aplikasi ini tidak memerlukan proses build maupun instalasi dependency sehingga 
 
 ### Halaman Home
 
-![Home](README-assets/home-dark.png)
+![Home](README-assets/home-dark.jpeg)
 
 ### Menu Tagihan
 
-![Tagihan](README-assets/tagihan.png)
+![Tagihan](README-assets/tagihan.jpeg)
 
 ### Pembayaran PLN
 
-![PLN](README-assets/pln.png)
+![PLN](README-assets/pln.jpeg)
 
 ### Pilih Metode Pembayaran
 
-![Pembayaran](README-assets/payment-method.png)
+![Pembayaran](README-assets/payment-method.jpeg)
 
 ### Virtual Account
 
-![Virtual Account](README-assets/virtual-account.png)
+![Virtual Account](README-assets/virtual-account.jpeg)
 
 ### Pembayaran QRIS
 
-![QRIS](README-assets/qris.png)
+![QRIS](README-assets/qris.jpeg)
 
 ### Pembayaran Teller
 
-![Teller](README-assets/teller.png)
+![Teller](README-assets/teller.jpeg)
 
 ### Transaksi Berhasil
 
-![Success](README-assets/success.png)
+![Success](README-assets/success.jpeg)
 
 ### Riwayat Transaksi
 
-![History](README-assets/history.png)
+![History](README-assets/history.jpeg)
 
 ### Bukti Pembayaran (PDF)
 
-![PDF](README-assets/pdf.png)
+![PDF](README-assets/pdf.jpeg)
 
 ---
 

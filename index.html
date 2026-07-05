@@ -1,0 +1,2093 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, " />
+<title>BayarKita — Bayar Tagihan &amp; Isi Ulang</title>
+<meta name="description" content="BayarKita — bayar tagihan, isi pulsa, dan bayar SPP dalam satu genggaman." />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['-apple-system','BlinkMacSystemFont','"SF Pro Display"','"SF Pro Text"','Inter','"Segoe UI"','Roboto','sans-serif'],
+        },
+        colors: {
+          brand: {
+            50:  '#EAFBF4',
+            100: '#CFF5E4',
+            200: '#9EE9CC',
+            300: '#65D8AF',
+            400: '#34C395',
+            500: '#149E7C',
+            600: '#0D7F68',
+            700: '#0B6656',
+            800: '#0A4F45',
+            900: '#083C37',
+            950: '#04211E',
+          },
+        },
+        boxShadow: {
+          'ios': '0 1px 2px rgba(16,24,22,0.04), 0 8px 24px -8px rgba(16,24,22,0.10)',
+          'ios-lg': '0 4px 10px rgba(16,24,22,0.06), 0 20px 40px -16px rgba(16,24,22,0.18)',
+          'card-glow': '0 20px 45px -12px rgba(20,158,124,0.45), 0 4px 16px -4px rgba(20,158,124,0.25)',
+        },
+        borderRadius: {
+          '4xl': '2rem',
+          '5xl': '2.5rem',
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root{
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html, body { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body {
+    background: #EFF4F2;
+    transition: background-color .35s ease;
+  }
+  html.dark body { background: #06100E; }
+  #app-shell { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, "Segoe UI", Roboto, sans-serif; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .safe-top { padding-top: var(--safe-top); }
+  .safe-bottom { padding-bottom: var(--safe-bottom); }
+
+  @keyframes bk-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes bk-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes bk-sheet-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
+  @keyframes bk-toast-in { from { opacity: 0; transform: translate(-50%, -16px) scale(0.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+  @keyframes bk-toast-out { from { opacity: 1; transform: translate(-50%, 0) scale(1); } to { opacity: 0; transform: translate(-50%, -16px) scale(0.96); } }
+  @keyframes bk-spin { to { transform: rotate(360deg); } }
+  @keyframes bk-pop { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes bk-shimmer { 0% { transform: translateX(-120%) rotate(8deg); } 100% { transform: translateX(220%) rotate(8deg); } }
+  @keyframes bk-shine-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  @keyframes bk-skeleton { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes bk-ring { to { stroke-dashoffset: 0; } }
+  @keyframes bk-float-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bk-scale-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+  .anim-fade-in { animation: bk-fade-in .22s ease both; }
+  .anim-sheet-up { animation: bk-sheet-up .32s cubic-bezier(.32,.72,0,1) both; }
+  .anim-sheet-down { animation: bk-sheet-down .28s cubic-bezier(.32,.72,0,1) both; }
+  .anim-toast-in { animation: bk-toast-in .28s cubic-bezier(.32,.72,0,1) both; }
+  .anim-toast-out { animation: bk-toast-out .22s ease both; }
+  .anim-spin { animation: bk-spin 0.9s linear infinite; }
+  .anim-pop { animation: bk-pop .45s cubic-bezier(.34,1.56,.64,1) both; }
+  .anim-float-up { animation: bk-float-up .35s ease both; }
+  .anim-scale-in { animation: bk-scale-in .22s cubic-bezier(.32,.72,0,1) both; }
+
+  .card-shimmer {
+    position: absolute; top: -40%; bottom: -40%; left: 0; width: 34%;
+    background: linear-gradient(75deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0) 100%);
+    animation: bk-shimmer 2.6s ease-in-out 0.3s 1;
+    pointer-events: none;
+  }
+  .glow-pulse { animation: bk-shine-pulse 2.8s ease-in-out infinite; }
+
+  .skeleton-block {
+    background: linear-gradient(90deg, rgba(20,158,124,0.08) 25%, rgba(20,158,124,0.16) 37%, rgba(20,158,124,0.08) 63%);
+    background-size: 400% 100%;
+    animation: bk-skeleton 1.4s ease infinite;
+  }
+  html.dark .skeleton-block {
+    background: linear-gradient(90deg, rgba(52,195,149,0.08) 25%, rgba(52,195,149,0.18) 37%, rgba(52,195,149,0.08) 63%);
+    background-size: 400% 100%;
+  }
+
+  .glass-header {
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  html.dark .glass-header {
+    background: rgba(10,20,18,0.62);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .glass-nav {
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+  }
+  html.dark .glass-nav {
+    background: rgba(8,18,16,0.72);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+  }
+  .glass-sheet {
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+  }
+  html.dark .glass-sheet {
+    background: rgba(14,24,22,0.96);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+  }
+  .glass-footer {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  html.dark .glass-footer {
+    background: rgba(10,20,18,0.82);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .emboss-btn {
+    background: linear-gradient(145deg, #ffffff, #eef5f2);
+    box-shadow: 6px 6px 14px rgba(16,44,38,0.08), -4px -4px 10px rgba(255,255,255,0.9), inset 0 0 0 1px rgba(16,44,38,0.03);
+  }
+  html.dark .emboss-btn {
+    background: linear-gradient(145deg, #142723, #0c1917);
+    box-shadow: 6px 6px 14px rgba(0,0,0,0.45), -4px -4px 10px rgba(52,195,149,0.04), inset 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  .mesh-card {
+    background-image:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 45%),
+      radial-gradient(circle at 85% 0%, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 40%),
+      radial-gradient(circle at 100% 100%, rgba(4,33,30,0.35) 0%, rgba(4,33,30,0) 55%),
+      linear-gradient(135deg, #0D7F68 0%, #149E7C 45%, #34C395 100%);
+  }
+  html.dark .mesh-card {
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%),
+      radial-gradient(circle at 90% 0%, rgba(101,216,175,0.18) 0%, rgba(255,255,255,0) 40%),
+      radial-gradient(circle at 100% 100%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 55%),
+      linear-gradient(135deg, #0A4F45 0%, #0D7F68 50%, #149E7C 100%);
+  }
+
+  input:focus { outline: none; }
+  .no-tap-zoom { touch-action: manipulation; }
+
+  @media print {
+    body * { visibility: hidden; }
+    #receipt-print-area, #receipt-print-area * { visibility: visible; }
+    #receipt-print-area {
+      position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 24px;
+      box-shadow: none !important; border-radius: 0 !important;
+    }
+  }
+</style>
+
+<style>
+.responsive-fluid{width:100%;max-width:480px;margin:auto;}
+@media (max-width:360px){
+html{font-size:15px}
+.grid-cols-4{gap:.4rem}
+}
+@media (min-width:390px){
+html{font-size:16px}
+}
+@media (min-width:430px){
+html{font-size:17px}
+}
+button,input,select{min-height:44px}
+img,svg{max-width:100%;height:auto}
+</style>
+
+</head>
+<body>
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+/* ============================================================
+   BayarKita — single-page bill payment & top-up demo app
+   Plain React (no JSX/build step) so this file stays easy to
+   read line-by-line and lift into a pure vanilla setup later.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var e = React.createElement;
+  var useState = React.useState;
+  var useEffect = React.useEffect;
+  var useRef = React.useRef;
+  var useMemo = React.useMemo;
+
+  /* ---------------- helpers ---------------- */
+
+  function formatRupiah(n) {
+    var num = Math.round(Number(n) || 0);
+    return "Rp" + num.toLocaleString("id-ID");
+  }
+
+  function formatRupiahPlain(n) {
+    var num = Math.round(Number(n) || 0);
+    return num.toLocaleString("id-ID");
+  }
+
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function formatDateTime(d) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    return pad2(d.getDate()) + " " + months[d.getMonth()] + " " + d.getFullYear() + ", " +
+      pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+
+  function timeGreeting() {
+    var h = new Date().getHours();
+    if (h >= 4 && h < 11) return "Selamat Pagi";
+    if (h >= 11 && h < 15) return "Selamat Siang";
+    if (h >= 15 && h < 18) return "Selamat Sore";
+    return "Selamat Malam";
+  }
+
+  function randomDigits(len) {
+    var s = "";
+    for (var i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
+    return s;
+  }
+
+  function generateTrxId() {
+    return "BK" + Date.now().toString().slice(-8) + randomDigits(3);
+  }
+
+  function generateVANumber(prefix) {
+    return prefix + randomDigits(11);
+  }
+
+  function generatePaymentCode() {
+    return randomDigits(4) + "-" + randomDigits(4);
+  }
+
+  function classNames() {
+    var out = [];
+    for (var i = 0; i < arguments.length; i++) {
+      var a = arguments[i];
+      if (a) out.push(a);
+    }
+    return out.join(" ");
+  }
+
+  /* ---------------- dummy data ---------------- */
+
+  var PROVIDERS = [
+    { id: "telkomsel", name: "Telkomsel", initials: "TS", from: "#EE0A24", to: "#B8071C" },
+    { id: "indosat", name: "Indosat", initials: "IM3", from: "#FFD200", to: "#F5A300" },
+    { id: "xl", name: "XL Axiata", initials: "XL", from: "#1258A6", to: "#0B3E7A" },
+    { id: "axis", name: "AXIS", initials: "AX", from: "#7B2FF7", to: "#4E12B0" },
+    { id: "tri", name: "Tri", initials: "3", from: "#3D2C8D", to: "#241964" },
+    { id: "smartfren", name: "Smartfren", initials: "SF", from: "#E4002B", to: "#9E0020" }
+  ];
+
+  var NOMINALS = [10000, 20000, 25000, 50000, 100000, 150000, 200000, 300000];
+
+  var UTILITY_SERVICES = [
+    { id: "pln", label: "PLN", subLabel: "Token & Tagihan Listrik", icon: "zap", numberLabel: "ID Pelanggan / No. Meter" },
+    { id: "pdam", label: "PDAM", subLabel: "Tagihan Air", icon: "droplet", numberLabel: "Nomor Pelanggan PDAM" },
+    { id: "internet", label: "Internet", subLabel: "Wifi & TV Kabel", icon: "wifi", numberLabel: "Nomor Pelanggan / ID Layanan" }
+  ];
+
+  var QUICK_MENU = [
+    { id: "pln", label: "PLN", icon: "zap", tab: "tagihan", service: "pln" },
+    { id: "pdam", label: "PDAM", icon: "droplet", tab: "tagihan", service: "pdam" },
+    { id: "internet", label: "Internet", icon: "wifi", tab: "tagihan", service: "internet" },
+    { id: "spp", label: "SPP", icon: "graduation", tab: "spp" },
+    { id: "pulsa", label: "Pulsa", icon: "smartphone", tab: "tagihan", service: "pulsa" },
+    { id: "paket-data", label: "Paket Data", icon: "wifi", tab: "tagihan", service: "pulsa" },
+    { id: "emoney", label: "E-Wallet", icon: "wallet", tab: "tagihan", service: "pulsa" },
+    { id: "lainnya", label: "Lainnya", icon: "grid", tab: "tagihan", service: "pulsa" }
+  ];
+
+  var PROMOS = [
+    { id: 1, title: "Cashback 25rb", desc: "Bayar listrik minggu ini", from: "#0D7F68", to: "#34C395", icon: "sparkles" },
+    { id: 2, title: "Diskon SPP 10%", desc: "Untuk mahasiswa baru", from: "#12406B", to: "#2C7DA0", icon: "graduation" },
+    { id: 3, title: "Gratis Admin", desc: "Semua transaksi VA hari ini", from: "#7B2FF7", to: "#B07CF5", icon: "gift" },
+    { id: 4, title: "Bonus Kuota 2GB", desc: "Isi pulsa min. Rp50.000", from: "#B8071C", to: "#EE0A24", icon: "wifi" }
+  ];
+
+  var SPP_ITEMS_TEMPLATE = [
+    { desc: "UKT Semester 1 (2024/2025)", amount: 4500000, status: "Lunas" },
+    { desc: "UKT Semester 2 (2024/2025)", amount: 4500000, status: "Lunas" },
+    { desc: "UKT Semester 3 (2025/2026)", amount: 4750000, status: "Belum" },
+    { desc: "Dana Praktikum Semester 3", amount: 650000, status: "Belum" },
+    { desc: "Iuran Kemahasiswaan", amount: 150000, status: "Belum" },
+    { desc: "Denda Keterlambatan KRS", amount: 50000, status: "Belum" },
+    { desc: "UKT Semester 4 (2025/2026)", amount: 4750000, status: "Belum" },
+    { desc: "Sumbangan Wisuda (opsional)", amount: 850000, status: "Belum" }
+  ];
+
+  var BANKS = [
+    { id: "bca", name: "BCA", prefix: "39021", from: "#0D3B8C", to: "#1857C4" },
+    { id: "bni", name: "BNI", prefix: "98801", from: "#F7941E", to: "#D9720B" },
+    { id: "mandiri", name: "Mandiri", prefix: "88608", from: "#003D79", to: "#005AAE" }
+  ];
+
+  var TELLER_LOCATIONS = [
+    { name: "Indomaret / Alfamart", desc: "Seluruh gerai di Indonesia", distance: "±0.4 km" },
+    { name: "Kantor Pos Indonesia", desc: "Loket pembayaran & PPOB", distance: "±1.2 km" },
+    { name: "Bank BayarKita Partner", desc: "Teller cabang mitra", distance: "±2.0 km" }
+  ];
+
+  window.__BK__ = window.__BK__ || {};
+  window.__BK__.helpers = {
+    e: e, useState: useState, useEffect: useEffect, useRef: useRef, useMemo: useMemo,
+    formatRupiah: formatRupiah, formatRupiahPlain: formatRupiahPlain, formatDateTime: formatDateTime,
+    timeGreeting: timeGreeting, randomDigits: randomDigits, generateTrxId: generateTrxId,
+    generateVANumber: generateVANumber, generatePaymentCode: generatePaymentCode, classNames: classNames
+  };
+  window.__BK__.data = {
+    PROVIDERS: PROVIDERS, NOMINALS: NOMINALS, UTILITY_SERVICES: UTILITY_SERVICES, QUICK_MENU: QUICK_MENU,
+    PROMOS: PROMOS, SPP_ITEMS_TEMPLATE: SPP_ITEMS_TEMPLATE, BANKS: BANKS, TELLER_LOCATIONS: TELLER_LOCATIONS
+  };
+})();
+
+/* ============================================================
+   Icon system — small hand-drawn line icons in a Lucide-like
+   style (24x24, round joins, currentColor stroke).
+   ============================================================ */
+(function () {
+  "use strict";
+  var e = window.__BK__.helpers.e;
+
+  function P(d) { return e("path", { d: d }); }
+  function C(cx, cy, r) { return e("circle", { cx: cx, cy: cy, r: r }); }
+  function L(x1, y1, x2, y2) { return e("line", { x1: x1, y1: y1, x2: x2, y2: y2 }); }
+
+  var ICONS = {
+    home: function () { return [P("M4 11.5 12 4l8 7.5"), P("M6 10v9.5a.5.5 0 0 0 .5.5H10v-6h4v6h3.5a.5.5 0 0 0 .5-.5V10")]; },
+    receipt: function () { return [P("M6 3h12v17.5l-2.2-1.4-2 1.4-1.8-1.4-1.8 1.4-2-1.4L6 20.5V3Z"), L(8.5, 7.5, 15.5, 7.5), L(8.5, 11, 15.5, 11), L(8.5, 14.5, 13, 14.5)]; },
+    graduation: function () { return [P("M2.5 8.5 12 4l9.5 4.5-9.5 4.5-9.5-4.5Z"), P("M6.5 10.7v4.4c0 1.6 2.4 3 5.5 3s5.5-1.4 5.5-3v-4.4"), P("M21.5 8.5v6")]; },
+    history: function () { return [C(12, 12.5, 8), P("M12 8.2v4.3l3.2 2"), P("M4.6 6 3.2 9.2 6.4 9.7")]; },
+    user: function () { return [C(12, 8.3, 3.3), P("M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2")]; },
+    sun: function () { return [C(12, 12, 3.6), L(12, 3, 12, 5.2), L(12, 18.8, 12, 21), L(3, 12, 5.2, 12), L(18.8, 12, 21, 12), L(5.6, 5.6, 7.1, 7.1), L(16.9, 16.9, 18.4, 18.4), L(5.6, 18.4, 7.1, 16.9), L(16.9, 7.1, 18.4, 5.6)]; },
+    moon: function () { return [P("M20 14.5A8.4 8.4 0 0 1 9.5 4a8.4 8.4 0 1 0 10.5 10.5Z")]; },
+    zap: function () { return [P("M12.7 2.5 4.8 13.4h5.2L9 21.5l8-11h-5.2z")]; },
+    droplet: function () { return [P("M12 3.3s6.2 7 6.2 11.4a6.2 6.2 0 0 1-12.4 0C5.8 10.3 12 3.3 12 3.3Z")]; },
+    wifi: function () { return [P("M3.5 9.2a12.2 12.2 0 0 1 17 0"), P("M6.6 12.6a8 8 0 0 1 10.8 0"), P("M9.7 16a4 4 0 0 1 4.6 0"), C(12, 19.3, 0.6)]; },
+    smartphone: function () { return [e("rect", { x: 7, y: 2.5, width: 10, height: 19, rx: 2.2 }), L(10.3, 19, 13.7, 19)]; },
+    creditcard: function () { return [e("rect", { x: 2.6, y: 5.5, width: 18.8, height: 13, rx: 2.2 }), L(2.6, 10, 21.4, 10), L(6, 15, 10, 15)]; },
+    copy: function () { return [e("rect", { x: 8.5, y: 8.5, width: 12, height: 12, rx: 2 }), P("M15.5 8.5V5.7a1.7 1.7 0 0 0-1.7-1.7H5.2a1.7 1.7 0 0 0-1.7 1.7v9.6a1.7 1.7 0 0 0 1.7 1.7h2.8")]; },
+    check: function () { return [P("M4.5 12.5 9.5 17.5 19.5 6.5")]; },
+    checkcircle: function () { return [C(12, 12, 9.2), P("M7.8 12.3 10.6 15 16.3 9")]; },
+    xcircle: function () { return [C(12, 12, 9.2), L(9, 9, 15, 15), L(15, 9, 9, 15)]; },
+    x: function () { return [L(5.5, 5.5, 18.5, 18.5), L(18.5, 5.5, 5.5, 18.5)]; },
+    chevronright: function () { return [P("M9 5.5 16 12l-7 6.5")]; },
+    chevronleft: function () { return [P("M15 5.5 8 12l7 6.5")]; },
+    chevrondown: function () { return [P("M5.5 9 12 16l6.5-7")]; },
+    arrowleft: function () { return [L(19, 12, 5, 12), P("M10.5 5.5 4 12l6.5 6.5")]; },
+    search: function () { return [C(11, 11, 7), L(21, 21, 16.2, 16.2)]; },
+    trash: function () { return [L(4, 7, 20, 7), P("M6 7h12l-1 13.5H7L6 7Z"), L(10, 3.5, 14, 3.5), L(9.5, 11, 9.5, 16.5), L(14.5, 11, 14.5, 16.5)]; },
+    download: function () { return [L(12, 3.5, 12, 15), P("M7.5 11 12 15.5 16.5 11"), L(4.5, 19, 19.5, 19)]; },
+    printer: function () { return [e("rect", { x: 5.5, y: 8.5, width: 13, height: 7.5, rx: 1.4 }), P("M7.5 8.5V4h9v4.5"), P("M7.5 16v4h9v-4"), C(15.3, 11.6, 0.4)]; },
+    qrcode: function () { return [e("rect", { x: 3.5, y: 3.5, width: 6.5, height: 6.5, rx: 1 }), e("rect", { x: 14, y: 3.5, width: 6.5, height: 6.5, rx: 1 }), e("rect", { x: 3.5, y: 14, width: 6.5, height: 6.5, rx: 1 }), e("rect", { x: 14.3, y: 14.3, width: 2.4, height: 2.4 }), e("rect", { x: 18, y: 14.3, width: 2.4, height: 2.4 }), e("rect", { x: 14.3, y: 18, width: 2.4, height: 2.4 }), e("rect", { x: 18, y: 18, width: 2.4, height: 2.4 })]; },
+    landmark: function () { return [L(3.5, 20.5, 20.5, 20.5), L(4.5, 20.5, 4.5, 11.5), L(8.3, 20.5, 8.3, 11.5), L(12, 20.5, 12, 11.5), L(15.7, 20.5, 15.7, 11.5), L(19.5, 20.5, 19.5, 11.5), P("M2.7 11.5 12 3.3l9.3 8.2Z")]; },
+    loader: function () { return [L(12, 2.5, 12, 6), L(12, 18, 12, 21.5), L(4.9, 4.9, 7.3, 7.3), L(16.7, 16.7, 19.1, 19.1), L(2.5, 12, 6, 12), L(18, 12, 21.5, 12), L(4.9, 19.1, 7.3, 16.7), L(16.7, 7.3, 19.1, 4.9)]; },
+    alertcircle: function () { return [C(12, 12, 9.2), L(12, 7.3, 12, 13), C(12, 16.3, 0.15)]; },
+    bell: function () { return [P("M6 10.2a6 6 0 0 1 12 0c0 3 .9 4.9 1.8 6.1H4.2C5.1 15.1 6 13.2 6 10.2Z"), P("M10 19a2 2 0 0 0 4 0")]; },
+    wallet: function () { return [P("M3.5 7.8a2.3 2.3 0 0 1 2.3-2.3h11.4a2.3 2.3 0 0 1 2.3 2.3v8.9a2.3 2.3 0 0 1-2.3 2.3H5.8a2.3 2.3 0 0 1-2.3-2.3Z"), P("M15.2 13.1a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8Z"), L(3.5, 9, 19.5, 9)]; },
+    sparkles: function () { return [P("M11.5 3.5 13 8l4.5 1.5L13 11l-1.5 4.5L10 11 5.5 9.5 10 8Z"), P("M18.5 15.5 19.3 17.7 21.5 18.5 19.3 19.3 18.5 21.5 17.7 19.3 15.5 18.5 17.7 17.7Z")]; },
+    mappin: function () { return [P("M12 21s6.8-6.4 6.8-11.6a6.8 6.8 0 1 0-13.6 0C5.2 14.6 12 21 12 21Z"), C(12, 9.4, 2.1)]; },
+    gift: function () { return [e("rect", { x: 4, y: 10, width: 16, height: 10, rx: 1.4 }), L(4, 13.5, 20, 13.5), L(12, 10, 12, 20), P("M12 10c0-2.6-1.6-5-4-5S5 8 8 10Z"), P("M12 10c0-2.6 1.6-5 4-5s3 3 0 5Z")]; },
+    plus: function () { return [L(12, 5, 12, 19), L(5, 12, 19, 12)]; },
+    info: function () { return [C(12, 12, 9.2), L(12, 11, 12, 16.5), C(12, 7.9, 0.15)]; },
+    shield: function () { return [P("M12 3 4.5 5.8v5.7c0 5 3.4 7.9 7.5 9.5 4.1-1.6 7.5-4.5 7.5-9.5V5.8Z"), P("M8.8 12 11 14.2 15.3 9.6")]; },
+    grid: function () { return [e("rect", { x: 3.5, y: 3.5, width: 7, height: 7, rx: 1.2 }), e("rect", { x: 13.5, y: 3.5, width: 7, height: 7, rx: 1.2 }), e("rect", { x: 3.5, y: 13.5, width: 7, height: 7, rx: 1.2 }), e("rect", { x: 13.5, y: 13.5, width: 7, height: 7, rx: 1.2 })]; },
+    clock: function () { return [C(12, 12, 9.2), P("M12 7.5V12l3.3 2")]; },
+    banknote: function () { return [e("rect", { x: 2.5, y: 6.5, width: 19, height: 11, rx: 1.8 }), C(12, 12, 2.6), C(6, 10, 0.1), C(18, 14, 0.1)]; },
+    building: function () { return [e("rect", { x: 5, y: 3.5, width: 14, height: 17, rx: 1 }), L(8, 7, 10, 7), L(14, 7, 16, 7), L(8, 11, 10, 11), L(14, 11, 16, 11), L(8, 15, 10, 15), L(14, 15, 16, 15), L(10.5, 20.5, 10.5, 17.5), L(13.5, 20.5, 13.5, 17.5)]; },
+    logout: function () { return [P("M9 4.5H6a1.8 1.8 0 0 0-1.8 1.8v11.4A1.8 1.8 0 0 0 6 19.5h3"), L(21, 12, 10.5, 12), P("M17 8l4 4-4 4")]; }
+  };
+
+  function Icon(props) {
+    var name = props.name;
+    var size = props.size || 22;
+    var className = props.className || "";
+    var strokeWidth = props.strokeWidth || 1.8;
+    var builder = ICONS[name] || ICONS.info;
+    var kids = builder();
+    var keyed = kids.map(function (k, i) { return React.cloneElement(k, { key: i }); });
+    return e.apply(null, [
+      "svg",
+      {
+        width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+        stroke: "currentColor", strokeWidth: strokeWidth,
+        strokeLinecap: "round", strokeLinejoin: "round",
+        className: className
+      }
+    ].concat(keyed));
+  }
+
+  window.__BK__.Icon = Icon;
+})();
+
+/* ============================================================
+   Small reusable UI primitives
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, useEffect = h.useEffect, cn = h.classNames;
+  var Icon = window.__BK__.Icon;
+
+  /* ---- Toast ---- */
+  function ToastStack(props) {
+    var toasts = props.toasts;
+    return e(
+      "div",
+      { className: "fixed top-0 left-0 right-0 z-[80] flex flex-col items-center pointer-events-none safe-top", style: { paddingTop: "calc(var(--safe-top) + 14px)" } },
+      toasts.map(function (t) {
+        return e(
+          "div",
+          {
+            key: t.id,
+            className: cn(
+              "mb-2 max-w-[86%] flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-2xl shadow-ios-lg border text-sm font-medium",
+              t.leaving ? "anim-toast-out" : "anim-toast-in",
+              t.type === "error"
+                ? "bg-red-500/95 text-white border-red-400/40"
+                : t.type === "info"
+                ? "bg-slate-800/95 text-white border-slate-600/40"
+                : "bg-brand-600/95 text-white border-brand-400/40"
+            ),
+            style: { position: "relative", left: "50%", transform: "translateX(-50%)" }
+          },
+          e(Icon, { name: t.type === "error" ? "alertcircle" : t.type === "info" ? "info" : "checkcircle", size: 17 }),
+          e("span", null, t.message)
+        );
+      })
+    );
+  }
+
+  /* ---- Segmented control (iOS pills) ---- */
+  function SegmentedControl(props) {
+    var options = props.options, value = props.value, onChange = props.onChange;
+    return e(
+      "div",
+      { className: "flex gap-2 overflow-x-auto no-scrollbar px-4 pb-1" },
+      options.map(function (opt) {
+        var active = opt.id === value;
+        return e(
+          "button",
+          {
+            key: opt.id,
+            onClick: function () { onChange(opt.id); },
+            className: cn(
+              "shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all no-tap-zoom",
+              active
+                ? "bg-brand-600 text-white shadow-ios"
+                : "bg-white/70 dark:bg-white/[0.06] text-slate-500 dark:text-slate-300 border border-slate-200/70 dark:border-white/10"
+            )
+          },
+          opt.icon ? e(Icon, { name: opt.icon, size: 15 }) : null,
+          e("span", null, opt.label)
+        );
+      })
+    );
+  }
+
+  /* ---- Theme toggle switch ---- */
+  function ThemeSwitch(props) {
+    var dark = props.dark, onToggle = props.onToggle;
+    return e(
+      "button",
+      {
+        onClick: onToggle,
+        "aria-label": "Ubah tema",
+        className: cn(
+          "relative w-14 h-8 rounded-full flex items-center px-1 transition-colors duration-300 no-tap-zoom",
+          dark ? "bg-brand-700" : "bg-brand-100"
+        )
+      },
+      e(
+        "span",
+        {
+          className: cn(
+            "absolute w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300",
+            dark ? "translate-x-6 text-brand-700" : "translate-x-0 text-amber-500"
+          )
+        },
+        e(Icon, { name: dark ? "moon" : "sun", size: 14, strokeWidth: 2.1 })
+      )
+    );
+  }
+
+  /* ---- Checkbox ---- */
+  function Checkbox(props) {
+    var checked = props.checked, disabled = props.disabled, onChange = props.onChange;
+    return e(
+      "button",
+      {
+        type: "button",
+        disabled: disabled,
+        onClick: onChange,
+        className: cn(
+          "w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shrink-0 no-tap-zoom",
+          disabled
+            ? "bg-slate-200 border-slate-200 dark:bg-white/10 dark:border-white/10"
+            : checked
+            ? "bg-brand-600 border-brand-600"
+            : "bg-white border-slate-300 dark:bg-transparent dark:border-white/25"
+        )
+      },
+      checked ? e(Icon, { name: "check", size: 14, strokeWidth: 3, className: "text-white" }) : null
+    );
+  }
+
+  /* ---- Skeleton ---- */
+  function Skeleton(props) {
+    return e("div", { className: cn("skeleton-block rounded-xl", props.className) });
+  }
+
+  /* ---- Status badge ---- */
+  function Badge(props) {
+    var tone = props.tone || "success";
+    var tones = {
+      success: "bg-brand-50 text-brand-700 dark:bg-brand-400/15 dark:text-brand-300",
+      pending: "bg-amber-50 text-amber-600 dark:bg-amber-400/15 dark:text-amber-300",
+      danger: "bg-red-50 text-red-600 dark:bg-red-400/15 dark:text-red-300",
+      neutral: "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-300"
+    };
+    return e(
+      "span",
+      { className: cn("text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap", tones[tone]) },
+      props.children
+    );
+  }
+
+  /* ---- Spinner ---- */
+  function Spinner(props) {
+    return e(Icon, { name: "loader", size: props.size || 20, className: cn("anim-spin", props.className) });
+  }
+
+  /* ---- Bottom sheet (drawer) ---- */
+  function BottomSheet(props) {
+    var open = props.open, onClose = props.onClose, title = props.title, children = props.children;
+    var maxH = props.maxHeight || "82vh";
+    if (!open) return null;
+    return e(
+      "div",
+      { className: "fixed inset-0 z-[70]" },
+      e("div", {
+        className: "absolute inset-0 bg-black/45 anim-fade-in",
+        onClick: onClose
+      }),
+      e(
+        "div",
+        {
+          className: "absolute left-0 right-0 bottom-0 mx-auto max-w-[480px] w-full glass-sheet rounded-t-4xl shadow-ios-lg anim-sheet-up flex flex-col",
+          style: { maxHeight: maxH }
+        },
+        e("div", { className: "flex justify-center pt-2.5 pb-1 shrink-0" }, e("div", { className: "w-9 h-1.5 rounded-full bg-slate-300 dark:bg-white/20" })),
+        title
+          ? e(
+              "div",
+              { className: "flex items-center justify-between px-4 sm:px-5 pb-3 shrink-0" },
+              e("h3", { className: "text-[17px] font-bold text-slate-800 dark:text-white" }, title),
+              e(
+                "button",
+                { onClick: onClose, className: "w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 no-tap-zoom" },
+                e(Icon, { name: "x", size: 16 })
+              )
+            )
+          : null,
+        e("div", { className: "overflow-y-auto px-4 sm:px-5 pb-5 safe-bottom" }, children)
+      )
+    );
+  }
+
+  window.__BK__.ui = {
+    ToastStack: ToastStack, SegmentedControl: SegmentedControl, ThemeSwitch: ThemeSwitch,
+    Checkbox: Checkbox, Skeleton: Skeleton, Badge: Badge, Spinner: Spinner, BottomSheet: BottomSheet
+  };
+})();
+
+/* ============================================================
+   Bottom navigation + top header
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, cn = h.classNames;
+  var Icon = window.__BK__.Icon;
+
+  var NAV_ITEMS = [
+    { id: "home", label: "Home", icon: "home" },
+    { id: "tagihan", label: "Tagihan", icon: "receipt" },
+    { id: "spp", label: "SPP", icon: "graduation" },
+    { id: "riwayat", label: "Riwayat", icon: "history" }
+  ];
+
+  function BottomNav(props) {
+    var active = props.active, onChange = props.onChange;
+    return e(
+      "div",
+      { className: "fixed bottom-0 left-0 right-0 z-40 flex justify-center" },
+      e(
+        "div",
+        { className: "w-full max-w-[480px] w-full glass-nav border-t border-slate-200/60 dark:border-white/[0.06] safe-bottom" },
+        e(
+          "div",
+          { className: "grid grid-cols-4 px-2 pt-2 pb-1.5" },
+          NAV_ITEMS.map(function (item) {
+            var isActive = item.id === active;
+            return e(
+              "button",
+              {
+                key: item.id,
+                onClick: function () { onChange(item.id); },
+                className: "flex flex-col items-center gap-1 py-1 no-tap-zoom group"
+              },
+              e(
+                "span",
+                {
+                  className: cn(
+                    "flex items-center justify-center w-11 h-7 rounded-full transition-all duration-200",
+                    isActive ? "bg-brand-600/12 dark:bg-brand-400/15" : ""
+                  )
+                },
+                e(Icon, {
+                  name: item.icon,
+                  size: 22,
+                  strokeWidth: isActive ? 2.1 : 1.7,
+                  className: isActive ? "text-brand-600 dark:text-brand-300" : "text-slate-400 dark:text-slate-500"
+                })
+              ),
+              e(
+                "span",
+                {
+                  className: cn(
+                    "text-[11px] font-medium transition-colors",
+                    isActive ? "text-brand-600 dark:text-brand-300 font-bold" : "text-slate-400 dark:text-slate-500"
+                  )
+                },
+                item.label
+              )
+            );
+          })
+        )
+      )
+    );
+  }
+
+  function TopHeader(props) {
+    var dark = props.dark, onToggleTheme = props.onToggleTheme, greeting = props.greeting, onBell = props.onBell;
+    var ThemeSwitch = window.__BK__.ui.ThemeSwitch;
+    return e(
+      "div",
+      { className: "sticky top-0 z-30 glass-header border-b border-slate-200/50 dark:border-white/[0.06] safe-top" },
+      e(
+        "div",
+        { className: "flex items-center justify-between px-4 sm:px-5 py-3" },
+        e(
+          "div",
+          { className: "flex items-center gap-3" },
+          e(
+            "div",
+            { className: "w-11 h-11 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 flex items-center justify-center text-white font-bold text-sm sm:text-[15px] shadow-ios shrink-0" },
+            "RA"
+          ),
+          e(
+            "div",
+            null,
+            e("p", { className: "text-[12px] text-slate-400 dark:text-slate-400 leading-tight" }, greeting),
+            e("p", { className: "text-sm sm:text-[15px] font-bold text-slate-800 dark:text-white leading-tight" }, "Sahrul Alfiansyah")
+          )
+        ),
+        e(
+          "div",
+          { className: "flex items-center gap-2.5" },
+          e(
+            "button",
+            { onClick: onBell, className: "w-10 h-10 rounded-full bg-white/70 dark:bg-white/[0.06] border border-slate-200/70 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 relative no-tap-zoom" },
+            e(Icon, { name: "bell", size: 18 }),
+            e("span", { className: "absolute top-2 right-2.5 w-1.5 h-1.5 rounded-full bg-red-500" })
+          ),
+          e(ThemeSwitch, { dark: dark, onToggle: onToggleTheme })
+        )
+      )
+    );
+  }
+
+  window.__BK__.BottomNav = BottomNav;
+  window.__BK__.TopHeader = TopHeader;
+})();
+
+/* ============================================================
+   HOME TAB — saldo card, quick menu, promo carousel
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, cn = h.classNames, formatRupiah = h.formatRupiah;
+  var Icon = window.__BK__.Icon;
+  var data = window.__BK__.data;
+
+  function SaldoCard(props) {
+    var balance = props.balance;
+    var visible = props.visible;
+    var onToggleVisible = props.onToggleVisible;
+    return e(
+      "div",
+      { className: "relative mesh-card rounded-4xl p-5 pt-6 shadow-card-glow overflow-hidden text-white" },
+      e("div", { className: "card-shimmer" }),
+      e(
+        "div",
+        { className: "absolute -right-10 -top-14 w-44 h-44 rounded-full bg-white/10 blur-2xl glow-pulse" }
+      ),
+      e(
+        "div",
+        { className: "flex items-center justify-between mb-6" },
+        e(
+          "div",
+          { className: "flex items-center gap-2" },
+          e("div", { className: "w-9 h-6 rounded-md bg-white/25 border border-white/30 backdrop-blur-sm" }),
+          e("span", { className: "text-[13px] font-semibold tracking-wide text-white/85" }, "BayarKita Wallet")
+        ),
+        e(Icon, { name: "wifi", size: 20, className: "rotate-90 text-white/70" })
+      ),
+      e(
+        "p",
+        { className: "text-[12px] text-white/70 mb-1" },
+        "Saldo Simulasi"
+      ),
+      e(
+        "div",
+        { className: "flex items-center gap-2.5 mb-7" },
+        e(
+          "h2",
+          { className: "text-[clamp(1.5rem,5vw,2rem)] font-extrabold tracking-tight" },
+          visible ? formatRupiah(balance) : "Rp••••••••"
+        ),
+        e(
+          "button",
+          { onClick: onToggleVisible, className: "w-7 h-7 rounded-full bg-white/15 flex items-center justify-center no-tap-zoom" },
+          e(Icon, { name: visible ? "checkcircle" : "info", size: 14 })
+        )
+      ),
+      e(
+        "div",
+        { className: "flex items-center justify-between" },
+        e(
+          "div",
+          null,
+          e("p", { className: "text-[10px] text-white/60 uppercase tracking-wider mb-0.5" }, "Pemilik"),
+          e("p", { className: "text-[13px] font-semibold tracking-wide" }, "Sahrul Alfiansyah")
+        ),
+        e(
+          "div",
+          null,
+          e("p", { className: "text-[10px] text-white/60 uppercase tracking-wider mb-0.5 text-right" }, "No. Virtual"),
+          e("p", { className: "text-[13px] font-semibold tracking-widest" }, "4821 •• •• 0173")
+        )
+      )
+    );
+  }
+
+  function QuickMenu(props) {
+    var onSelect = props.onSelect;
+    var items = data.QUICK_MENU.slice(0, 8);
+    return e(
+      "div",
+      { className: "grid grid-cols-4 gap-y-4 gap-x-2" },
+      items.map(function (item) {
+        return e(
+          "button",
+          { key: item.id, onClick: function () { onSelect(item); }, className: "flex flex-col items-center gap-2 no-tap-zoom" },
+          e(
+            "span",
+            { className: "emboss-btn w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-brand-600 dark:text-brand-300" },
+            e(Icon, { name: item.icon, size: 23, strokeWidth: 1.7 })
+          ),
+          e("span", { className: "text-[11.5px] font-medium text-slate-600 dark:text-slate-300" }, item.label)
+        );
+      })
+    );
+  }
+
+  function PromoCarousel() {
+    return e(
+      "div",
+      { className: "flex gap-3 overflow-x-auto no-scrollbar px-4 sm:px-5 -mx-5 pb-1" },
+      data.PROMOS.map(function (p) {
+        return e(
+          "div",
+          {
+            key: p.id,
+            className: "shrink-0 w-[76%] rounded-3xl p-4 flex flex-col justify-between h-[108px] text-white shadow-ios relative overflow-hidden",
+            style: { background: "linear-gradient(135deg, " + p.from + ", " + p.to + ")" }
+          },
+          e("div", { className: "absolute -right-6 -bottom-8 w-28 h-28 rounded-full bg-white/10" }),
+          e(Icon, { name: p.icon, size: 20, className: "relative z-10" }),
+          e(
+            "div",
+            { className: "relative z-10" },
+            e("p", { className: "font-bold text-sm sm:text-[15px] leading-tight" }, p.title),
+            e("p", { className: "text-[12px] text-white/80 leading-tight" }, p.desc)
+          )
+        );
+      })
+    );
+  }
+
+  function SectionTitle(props) {
+    return e(
+      "div",
+      { className: "flex items-center justify-between px-4 sm:px-5 mb-3" },
+      e("h3", { className: "text-sm sm:text-[15px] font-bold text-slate-800 dark:text-white" }, props.title),
+      props.action
+        ? e("button", { onClick: props.action.onClick, className: "text-[12.5px] font-semibold text-brand-600 dark:text-brand-300" }, props.action.label)
+        : null
+    );
+  }
+
+  function HomeTab(props) {
+    var onQuickSelect = props.onQuickSelect;
+    var balanceVisible = useState(true);
+    var visible = balanceVisible[0], setVisible = balanceVisible[1];
+
+    return e(
+      "div",
+      { className: "pb-6 anim-fade-in" },
+      e("div", { className: "px-4 sm:px-5 pt-4 mb-6" }, e(SaldoCard, { balance: 5000000, visible: visible, onToggleVisible: function () { setVisible(!visible); } })),
+      e(SectionTitle, { title: "Menu Cepat" }),
+      e("div", { className: "px-4 sm:px-5 mb-7" }, e(QuickMenu, { onSelect: onQuickSelect })),
+      e(SectionTitle, { title: "Promo Menarik" }),
+      e("div", { className: "mb-2 px-4 sm:px-5" }, e(PromoCarousel, null))
+    );
+  }
+
+  window.__BK__.HomeTab = HomeTab;
+})();
+
+/* ============================================================
+   TAGIHAN & PULSA TAB
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, useEffect = h.useEffect, cn = h.classNames, formatRupiah = h.formatRupiah;
+  var Icon = window.__BK__.Icon;
+  var data = window.__BK__.data;
+  var ui = window.__BK__.ui;
+
+  var SEGMENTS = [
+    { id: "pulsa", label: "Pulsa", icon: "smartphone" },
+    { id: "pln", label: "PLN", icon: "zap" },
+    { id: "pdam", label: "PDAM", icon: "droplet" },
+    { id: "internet", label: "Internet", icon: "wifi" }
+  ];
+
+  function PulsaView(props) {
+    var onPay = props.onPay;
+    var phoneState = useState("");
+    var phone = phoneState[0], setPhone = phoneState[1];
+    var providerState = useState(null);
+    var provider = providerState[0], setProvider = providerState[1];
+    var nominalState = useState(null);
+    var nominal = nominalState[0], setNominal = nominalState[1];
+
+    var canContinue = phone.length >= 8 && provider && nominal;
+
+    return e(
+      "div",
+      { className: "px-4 sm:px-5 pt-4" },
+      e(
+        "label",
+        { className: "block mb-5" },
+        e("span", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block" }, "Nomor Handphone"),
+        e(
+          "div",
+          { className: "flex items-center gap-2.5 bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-ios" },
+          e(Icon, { name: "smartphone", size: 18, className: "text-slate-400" }),
+          e("input", {
+            value: phone,
+            onChange: function (ev) { setPhone(ev.target.value.replace(/[^0-9]/g, "")); },
+            placeholder: "08xx-xxxx-xxxx",
+            inputMode: "numeric",
+            className: "flex-1 bg-transparent text-sm sm:text-[15px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400"
+          })
+        )
+      ),
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Pilih Provider"),
+      e(
+        "div",
+        { className: "grid grid-cols-3 gap-2.5 mb-6" },
+        data.PROVIDERS.map(function (p) {
+          var active = provider === p.id;
+          return e(
+            "button",
+            {
+              key: p.id,
+              onClick: function () { setProvider(p.id); },
+              className: cn(
+                "flex flex-col items-center gap-1.5 py-3 rounded-2xl border transition-all no-tap-zoom",
+                active ? "border-brand-500 bg-brand-50 dark:bg-brand-400/10 shadow-ios" : "border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04]"
+              )
+            },
+            e(
+              "span",
+              {
+                className: "w-9 h-9 rounded-full flex items-center justify-center text-white text-[11px] font-bold",
+                style: { background: "linear-gradient(135deg," + p.from + "," + p.to + ")" }
+              },
+              p.initials
+            ),
+            e("span", { className: "text-[11px] font-medium text-slate-600 dark:text-slate-300" }, p.name)
+          );
+        })
+      ),
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Nominal Top Up"),
+      e(
+        "div",
+        { className: "grid grid-cols-2 gap-2.5 mb-7" },
+        data.NOMINALS.map(function (n) {
+          var active = nominal === n;
+          return e(
+            "button",
+            {
+              key: n,
+              onClick: function () { setNominal(n); },
+              className: cn(
+                "py-3.5 rounded-2xl border text-center transition-all no-tap-zoom",
+                active ? "border-brand-500 bg-brand-600 text-white shadow-ios" : "border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200"
+              )
+            },
+            e("span", { className: "font-bold text-[14.5px]" }, formatRupiah(n))
+          );
+        })
+      ),
+      e(
+        "button",
+        {
+          disabled: !canContinue,
+          onClick: function () {
+            onPay({
+              serviceKey: "pulsa",
+              icon: "smartphone",
+              title: "Isi Pulsa " + (data.PROVIDERS.find(function (p) { return p.id === provider; }) || {}).name,
+              subtitle: phone,
+              amount: nominal,
+              adminFee: 1000
+            });
+          },
+          className: cn(
+            "w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] transition-all no-tap-zoom mb-4",
+            canContinue ? "bg-brand-600 text-white shadow-ios-lg active:scale-[0.98]" : "bg-slate-200 dark:bg-white/10 text-slate-400 dark:text-slate-500"
+          )
+        },
+        "Lanjut Pembayaran"
+      )
+    );
+  }
+
+  function UtilityView(props) {
+    var service = props.service; // pln | pdam | internet
+    var onPay = props.onPay;
+    var toast = props.toast;
+
+    var svc = data.UTILITY_SERVICES.find(function (s) { return s.id === service; });
+    var numberState = useState("");
+    var number = numberState[0], setNumber = numberState[1];
+    var checkingState = useState(false);
+    var checking = checkingState[0], setChecking = checkingState[1];
+    var sheetOpenState = useState(false);
+    var sheetOpen = sheetOpenState[0], setSheetOpen = sheetOpenState[1];
+    var billState = useState(null);
+    var bill = billState[0], setBill = billState[1];
+
+    useEffect(function () { setNumber(""); setBill(null); setSheetOpen(false); }, [service]);
+
+    function handleCek() {
+      if (number.length < 5) { toast("Masukkan nomor pelanggan yang valid", "error"); return; }
+      setChecking(true);
+      setTimeout(function () {
+        var dummyAmount = service === "pln" ? 245000 : service === "pdam" ? 87500 : 349000;
+        setBill({
+          name: "AN. Sahrul Alfiansyah",
+          period: "Juni 2026",
+          amount: dummyAmount,
+          adminFee: service === "pln" ? 2500 : service === "pdam" ? 2000 : 3000
+        });
+        setChecking(false);
+        setSheetOpen(true);
+      }, 1300);
+    }
+
+    return e(
+      "div",
+      { className: "px-4 sm:px-5 pt-4" },
+      e(
+        "div",
+        { className: "flex items-center gap-3 mb-5 p-4 rounded-3xl bg-brand-50 dark:bg-brand-400/[0.08] border border-brand-100 dark:border-brand-400/10" },
+        e("span", { className: "w-11 h-11 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0 shadow-ios" }, e(Icon, { name: svc.icon, size: 20 })),
+        e(
+          "div",
+          null,
+          e("p", { className: "font-bold text-[14.5px] text-slate-800 dark:text-white" }, svc.label),
+          e("p", { className: "text-[12.5px] text-slate-500 dark:text-slate-400" }, svc.subLabel)
+        )
+      ),
+      e(
+        "label",
+        { className: "block mb-5" },
+        e("span", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block" }, svc.numberLabel),
+        e(
+          "div",
+          { className: "flex items-center gap-2.5 bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-ios" },
+          e(Icon, { name: "search", size: 18, className: "text-slate-400" }),
+          e("input", {
+            value: number,
+            onChange: function (ev) { setNumber(ev.target.value.replace(/[^0-9]/g, "")); },
+            placeholder: "Masukkan nomor pelanggan",
+            inputMode: "numeric",
+            className: "flex-1 bg-transparent text-sm sm:text-[15px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400"
+          })
+        )
+      ),
+      e(
+        "button",
+        {
+          onClick: handleCek,
+          disabled: checking,
+          className: cn(
+            "w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] transition-all no-tap-zoom mb-5 flex items-center justify-center gap-2",
+            checking ? "bg-brand-400 text-white" : "bg-brand-600 text-white shadow-ios-lg active:scale-[0.98]"
+          )
+        },
+        checking ? e(ui.Spinner, { size: 18 }) : null,
+        checking ? "Memeriksa Tagihan..." : "Cek Tagihan"
+      ),
+      checking
+        ? e(
+            "div",
+            { className: "space-y-3 anim-fade-in" },
+            e(ui.Skeleton, { className: "h-4 w-2/3" }),
+            e(ui.Skeleton, { className: "h-4 w-1/2" }),
+            e(ui.Skeleton, { className: "h-20 w-full" })
+          )
+        : null,
+      e(
+        ui.BottomSheet,
+        { open: sheetOpen, onClose: function () { setSheetOpen(false); }, title: "Detail Tagihan" },
+        bill
+          ? e(
+              "div",
+              null,
+              e(
+                "div",
+                { className: "rounded-3xl bg-slate-50 dark:bg-white/[0.05] p-4 mb-5 space-y-3" },
+                e(BillRow, { label: "Nomor Pelanggan", value: number }),
+                e(BillRow, { label: "Nama Pelanggan", value: bill.name }),
+                e(BillRow, { label: "Periode", value: bill.period }),
+                e(BillRow, { label: "Jumlah Tagihan", value: formatRupiah(bill.amount) }),
+                e(BillRow, { label: "Biaya Admin", value: formatRupiah(bill.adminFee) }),
+                e("div", { className: "h-px bg-slate-200 dark:bg-white/10 my-1" }),
+                e(BillRow, { label: "Total Bayar", value: formatRupiah(bill.amount + bill.adminFee), bold: true })
+              ),
+              e(
+                "button",
+                {
+                  onClick: function () {
+                    setSheetOpen(false);
+                    onPay({
+                      serviceKey: service,
+                      icon: svc.icon,
+                      title: "Bayar " + svc.label,
+                      subtitle: number,
+                      amount: bill.amount,
+                      adminFee: bill.adminFee
+                    });
+                  },
+                  className: "w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] bg-brand-600 text-white shadow-ios-lg active:scale-[0.98] no-tap-zoom"
+                },
+                "Lanjut Pembayaran"
+              )
+            )
+          : null
+      )
+    );
+  }
+
+  function BillRow(props) {
+    return e(
+      "div",
+      { className: "flex items-center justify-between" },
+      e("span", { className: "text-[13px] text-slate-500 dark:text-slate-400" }, props.label),
+      e("span", { className: cn("text-[13.5px]", props.bold ? "font-extrabold text-brand-700 dark:text-brand-300 text-[16px]" : "font-semibold text-slate-800 dark:text-white") }, props.value)
+    );
+  }
+
+  function TagihanTab(props) {
+    var onPay = props.onPay, toast = props.toast, initialService = props.initialService;
+    var segState = useState(initialService || "pulsa");
+    var seg = segState[0], setSeg = segState[1];
+
+    useEffect(function () {
+      if (initialService) setSeg(initialService);
+    }, [initialService]);
+
+    return e(
+      "div",
+      { className: "pb-6 anim-fade-in" },
+      e("div", { className: "pt-4 mb-5" }, e(ui.SegmentedControl, { options: SEGMENTS, value: seg, onChange: setSeg })),
+      seg === "pulsa"
+        ? e(PulsaView, { onPay: onPay })
+        : e(UtilityView, { service: seg, onPay: onPay, toast: toast })
+    );
+  }
+
+  window.__BK__.TagihanTab = TagihanTab;
+})();
+
+/* ============================================================
+   SPP / BIAYA KULIAH TAB
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, cn = h.classNames, formatRupiah = h.formatRupiah;
+  var Icon = window.__BK__.Icon;
+  var data = window.__BK__.data;
+  var ui = window.__BK__.ui;
+
+  function SPPTab(props) {
+    var onPay = props.onPay, toast = props.toast;
+    var nimState = useState("");
+    var nim = nimState[0], setNim = nimState[1];
+    var searchingState = useState(false);
+    var searching = searchingState[0], setSearching = searchingState[1];
+    var itemsState = useState(null);
+    var items = itemsState[0], setItems = itemsState[1];
+
+    function handleSearch() {
+      if (nim.length < 4) { toast("Masukkan NIM yang valid", "error"); return; }
+      setSearching(true);
+      setItems(null);
+      setTimeout(function () {
+        var list = data.SPP_ITEMS_TEMPLATE.map(function (it, i) {
+          return {
+            id: "spp-" + i,
+            desc: it.desc,
+            amount: it.amount,
+            status: it.status,
+            checked: it.status === "Belum" && i === 2
+          };
+        });
+        setItems(list);
+        setSearching(false);
+        toast("Tagihan ditemukan", "success");
+      }, 1200);
+    }
+
+    function toggleItem(id) {
+      setItems(function (prev) {
+        return prev.map(function (it) {
+          if (it.id !== id || it.status === "Lunas") return it;
+          return Object.assign({}, it, { checked: !it.checked });
+        });
+      });
+    }
+
+    var total = 0;
+    var countChecked = 0;
+    if (items) {
+      items.forEach(function (it) { if (it.checked) { total += it.amount; countChecked += 1; } });
+    }
+
+    return e(
+      "div",
+      { className: "pb-28 anim-fade-in" },
+      e(
+        "div",
+        { className: "px-4 sm:px-5 pt-4 mb-5" },
+        e(
+          "div",
+          { className: "flex items-center gap-2.5 bg-white dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-ios mb-3" },
+          e(Icon, { name: "graduation", size: 18, className: "text-slate-400" }),
+          e("input", {
+            value: nim,
+            onChange: function (ev) { setNim(ev.target.value.replace(/[^0-9A-Za-z]/g, "")); },
+            placeholder: "Masukkan NIM Mahasiswa",
+            className: "flex-1 bg-transparent text-sm sm:text-[15px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400"
+          })
+        ),
+        e(
+          "button",
+          {
+            onClick: handleSearch,
+            disabled: searching,
+            className: cn(
+              "w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] transition-all no-tap-zoom flex items-center justify-center gap-2",
+              searching ? "bg-brand-400 text-white" : "bg-brand-600 text-white shadow-ios-lg active:scale-[0.98]"
+            )
+          },
+          searching ? e(ui.Spinner, { size: 18 }) : e(Icon, { name: "search", size: 17 }),
+          searching ? "Mencari Tagihan..." : "Cari Tagihan"
+        )
+      ),
+      searching
+        ? e(
+            "div",
+            { className: "px-4 sm:px-5 space-y-3" },
+            [0, 1, 2].map(function (i) { return e(ui.Skeleton, { key: i, className: "h-20 w-full rounded-3xl" }); })
+          )
+        : null,
+      items
+        ? e(
+            "div",
+            { className: "px-4 sm:px-5" },
+            e(
+              "div",
+              { className: "flex items-center justify-between mb-3" },
+              e("p", { className: "font-bold text-[14.5px] text-slate-800 dark:text-white" }, "Rincian Tagihan"),
+              e(ui.Badge, { tone: "neutral" }, items.length + " item")
+            ),
+            e(
+              "div",
+              { className: "space-y-2.5" },
+              items.map(function (it, idx) {
+                var lunas = it.status === "Lunas";
+                return e(
+                  "div",
+                  {
+                    key: it.id,
+                    className: "anim-float-up flex items-center gap-3 p-4 rounded-3xl bg-white dark:bg-white/[0.05] border border-slate-200/70 dark:border-white/10 shadow-ios",
+                    style: { animationDelay: idx * 0.03 + "s" }
+                  },
+                  e(ui.Checkbox, { checked: it.checked, disabled: lunas, onChange: function () { toggleItem(it.id); } }),
+                  e(
+                    "div",
+                    { className: "flex-1 min-w-0" },
+                    e("p", { className: "text-[13.5px] font-semibold text-slate-800 dark:text-white leading-tight truncate" }, it.desc),
+                    e("p", { className: "text-[13px] text-slate-500 dark:text-slate-400 font-medium" }, formatRupiah(it.amount))
+                  ),
+                  e(ui.Badge, { tone: lunas ? "success" : "pending" }, lunas ? "Lunas" : "Belum")
+                );
+              })
+            )
+          )
+        : !searching
+        ? e(
+            "div",
+            { className: "px-4 sm:px-5 pt-10 flex flex-col items-center text-center" },
+            e("div", { className: "w-16 h-16 rounded-full bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center text-brand-500 mb-4" }, e(Icon, { name: "graduation", size: 26 })),
+            e("p", { className: "font-bold text-slate-700 dark:text-slate-200 mb-1" }, "Cek Tagihan SPP Kamu"),
+            e("p", { className: "text-[13px] text-slate-500 dark:text-slate-400 max-w-[220px]" }, "Masukkan NIM untuk melihat rincian UKT dan biaya kuliah lainnya.")
+          )
+        : null,
+      items
+        ? e(
+            "div",
+            { className: "fixed bottom-16 left-0 right-0 z-30 flex justify-center safe-bottom" },
+            e(
+              "div",
+              { className: "w-full max-w-[480px] w-full glass-footer border-t border-slate-200/60 dark:border-white/10 px-4 sm:px-5 py-3.5 flex items-center justify-between gap-3" },
+              e(
+                "div",
+                null,
+                e("p", { className: "text-[11.5px] text-slate-500 dark:text-slate-400" }, countChecked + " tagihan dipilih"),
+                e("p", { className: "text-[17px] font-extrabold text-slate-800 dark:text-white" }, formatRupiah(total))
+              ),
+              e(
+                "button",
+                {
+                  disabled: total <= 0,
+                  onClick: function () {
+                    onPay({
+                      serviceKey: "spp",
+                      icon: "graduation",
+                      title: "Bayar SPP / Biaya Kuliah",
+                      subtitle: "NIM " + nim,
+                      amount: total,
+                      adminFee: 2500
+                    });
+                  },
+                  className: cn(
+                    "px-6 py-3.5 rounded-2xl font-bold text-[14px] transition-all no-tap-zoom shrink-0",
+                    total > 0 ? "bg-brand-600 text-white shadow-ios-lg active:scale-[0.98]" : "bg-slate-200 dark:bg-white/10 text-slate-400"
+                  )
+                },
+                "Lanjut Pembayaran"
+              )
+            )
+          )
+        : null
+    );
+  }
+
+  window.__BK__.SPPTab = SPPTab;
+})();
+
+/* ============================================================
+   RIWAYAT TRANSAKSI TAB
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, cn = h.classNames, formatRupiah = h.formatRupiah;
+  var Icon = window.__BK__.Icon;
+  var ui = window.__BK__.ui;
+
+  function RiwayatTab(props) {
+    var history = props.history, onClear = props.onClear;
+
+    return e(
+      "div",
+      { className: "pb-8 pt-4 anim-fade-in" },
+      e(
+        "div",
+        { className: "flex items-center justify-between px-4 sm:px-5 mb-4" },
+        e("h3", { className: "text-sm sm:text-[15px] font-bold text-slate-800 dark:text-white" }, "Riwayat Transaksi"),
+        history.length > 0
+          ? e(
+              "button",
+              { onClick: onClear, className: "flex items-center gap-1.5 text-[12.5px] font-semibold text-red-500 no-tap-zoom" },
+              e(Icon, { name: "trash", size: 14 }),
+              "Hapus Riwayat"
+            )
+          : null
+      ),
+      history.length === 0
+        ? e(
+            "div",
+            { className: "px-4 sm:px-5 pt-16 flex flex-col items-center text-center" },
+            e("div", { className: "w-16 h-16 rounded-full bg-slate-100 dark:bg-white/[0.06] flex items-center justify-center text-slate-400 mb-4" }, e(Icon, { name: "history", size: 26 })),
+            e("p", { className: "font-bold text-slate-700 dark:text-slate-200 mb-1" }, "Belum Ada Transaksi"),
+            e("p", { className: "text-[13px] text-slate-500 dark:text-slate-400 max-w-[220px]" }, "Semua transaksi yang berhasil akan tampil di sini.")
+          )
+        : e(
+            "div",
+            { className: "px-4 sm:px-5 space-y-2.5" },
+            history.map(function (t, idx) {
+              return e(
+                "div",
+                {
+                  key: t.id,
+                  className: "anim-float-up flex items-center gap-3 p-4 rounded-3xl bg-white dark:bg-white/[0.05] border border-slate-200/70 dark:border-white/10 shadow-ios",
+                  style: { animationDelay: idx * 0.03 + "s" }
+                },
+                e(
+                  "span",
+                  { className: "w-11 h-11 rounded-full bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0" },
+                  e(Icon, { name: t.icon, size: 19 })
+                ),
+                e(
+                  "div",
+                  { className: "flex-1 min-w-0" },
+                  e("p", { className: "text-[13.5px] font-semibold text-slate-800 dark:text-white leading-tight truncate" }, t.title),
+                  e("p", { className: "text-[12px] text-slate-500 dark:text-slate-400" }, t.subtitle + " · " + t.date)
+                ),
+                e(
+                  "div",
+                  { className: "text-right shrink-0" },
+                  e("p", { className: "text-[13.5px] font-bold text-slate-800 dark:text-white" }, formatRupiah(t.total)),
+                  e(ui.Badge, { tone: "success" }, "Berhasil")
+                )
+              );
+            })
+          )
+    );
+  }
+
+  window.__BK__.RiwayatTab = RiwayatTab;
+})();
+
+/* ============================================================
+   UNIVERSAL PAYMENT FLOW — method select, VA / QRIS / Teller,
+   loading overlay, and success receipt (print + PDF)
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, useEffect = h.useEffect, useRef = h.useRef, cn = h.classNames;
+  var formatRupiah = h.formatRupiah, formatDateTime = h.formatDateTime;
+  var generateVANumber = h.generateVANumber, generatePaymentCode = h.generatePaymentCode, generateTrxId = h.generateTrxId;
+  var Icon = window.__BK__.Icon;
+  var data = window.__BK__.data;
+  var ui = window.__BK__.ui;
+
+  var METHODS = [
+    { id: "va", label: "Virtual Account", desc: "Transfer via ATM / m-Banking", icon: "landmark" },
+    { id: "qris", label: "QRIS", desc: "Scan & bayar dari e-wallet apapun", icon: "qrcode" },
+    { id: "teller", label: "Teller / Kasir", desc: "Bayar tunai di gerai mitra", icon: "banknote" }
+  ];
+
+  function SheetShell(props) {
+    // Custom shell (header + scroll body + optional pinned footer)
+    return e(
+      "div",
+      { className: "fixed inset-0 z-[75]" },
+      e("div", { className: "absolute inset-0 bg-black/50 anim-fade-in" }),
+      e(
+        "div",
+        {
+          className: "absolute left-0 right-0 bottom-0 mx-auto max-w-[480px] w-full glass-sheet rounded-t-4xl shadow-ios-lg anim-sheet-up flex flex-col",
+          style: { maxHeight: "88vh" }
+        },
+        e("div", { className: "flex justify-center pt-2.5 pb-1 shrink-0" }, e("div", { className: "w-9 h-1.5 rounded-full bg-slate-300 dark:bg-white/20" })),
+        e(
+          "div",
+          { className: "flex items-center gap-2 px-4 sm:px-5 pb-3 shrink-0" },
+          props.onBack
+            ? e("button", { onClick: props.onBack, className: "w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-600 dark:text-slate-300 no-tap-zoom" }, e(Icon, { name: "arrowleft", size: 16 }))
+            : null,
+          e("h3", { className: "flex-1 text-[17px] font-bold text-slate-800 dark:text-white" }, props.title),
+          props.onClose
+            ? e("button", { onClick: props.onClose, className: "w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 no-tap-zoom" }, e(Icon, { name: "x", size: 16 }))
+            : null
+        ),
+        e("div", { className: "overflow-y-auto px-4 sm:px-5 pb-5 flex-1" }, props.children),
+        props.footer ? e("div", { className: "shrink-0 border-t border-slate-200/70 dark:border-white/10 px-4 sm:px-5 pt-3.5 glass-footer safe-bottom" }, props.footer) : null
+      )
+    );
+  }
+
+  function PayBar(props) {
+    return e(
+      "button",
+      {
+        onClick: props.onClick,
+        disabled: props.disabled,
+        className: "w-full mb-3.5 py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] bg-brand-600 text-white shadow-ios-lg active:scale-[0.98] no-tap-zoom flex items-center justify-center gap-2"
+      },
+      e("span", null, "Bayar Sekarang"),
+      e(Icon, { name: "chevronright", size: 17 })
+    );
+  }
+
+  function MethodStep(props) {
+    var onSelect = props.onSelect, amount = props.amount;
+    return e(
+      "div",
+      null,
+      e(
+        "div",
+        { className: "rounded-3xl bg-brand-50 dark:bg-brand-400/[0.08] p-4 mb-5 flex items-center justify-between" },
+        e("span", { className: "text-[13px] font-semibold text-slate-600 dark:text-slate-300" }, "Total Pembayaran"),
+        e("span", { className: "text-[19px] font-extrabold text-brand-700 dark:text-brand-300" }, formatRupiah(amount))
+      ),
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Pilih Metode Pembayaran"),
+      e(
+        "div",
+        { className: "space-y-2.5" },
+        METHODS.map(function (m) {
+          return e(
+            "button",
+            {
+              key: m.id,
+              onClick: function () { onSelect(m.id); },
+              className: "w-full flex items-center gap-3.5 p-4 rounded-3xl bg-white dark:bg-white/[0.05] border border-slate-200/70 dark:border-white/10 shadow-ios active:scale-[0.98] transition-transform no-tap-zoom"
+            },
+            e("span", { className: "w-11 h-11 rounded-full bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0" }, e(Icon, { name: m.icon, size: 20 })),
+            e(
+              "div",
+              { className: "flex-1 text-left" },
+              e("p", { className: "text-[14px] font-bold text-slate-800 dark:text-white" }, m.label),
+              e("p", { className: "text-[12px] text-slate-500 dark:text-slate-400" }, m.desc)
+            ),
+            e(Icon, { name: "chevronright", size: 18, className: "text-slate-400 shrink-0" })
+          );
+        })
+      )
+    );
+  }
+
+  function BankPickStep(props) {
+    var onSelect = props.onSelect;
+    return e(
+      "div",
+      null,
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Pilih Bank Tujuan"),
+      e(
+        "div",
+        { className: "space-y-2.5" },
+        data.BANKS.map(function (b) {
+          return e(
+            "button",
+            {
+              key: b.id,
+              onClick: function () { onSelect(b); },
+              className: "w-full flex items-center gap-3.5 p-4 rounded-3xl bg-white dark:bg-white/[0.05] border border-slate-200/70 dark:border-white/10 shadow-ios active:scale-[0.98] transition-transform no-tap-zoom"
+            },
+            e(
+              "span",
+              { className: "w-11 h-11 rounded-2xl flex items-center justify-center text-white text-[12px] font-extrabold shrink-0", style: { background: "linear-gradient(135deg," + b.from + "," + b.to + ")" } },
+              b.name
+            ),
+            e("span", { className: "flex-1 text-left text-[14px] font-bold text-slate-800 dark:text-white" }, "Virtual Account " + b.name),
+            e(Icon, { name: "chevronright", size: 18, className: "text-slate-400 shrink-0" })
+          );
+        })
+      )
+    );
+  }
+
+  function VADetailStep(props) {
+    var bank = props.bank, vaNumber = props.vaNumber, amount = props.amount, onCopy = props.onCopy;
+    return e(
+      "div",
+      null,
+      e(
+        "div",
+        {
+          className: "rounded-3xl p-5 mb-5 text-white relative overflow-hidden",
+          style: { background: "linear-gradient(135deg," + bank.from + "," + bank.to + ")" }
+        },
+        e("p", { className: "text-[12px] text-white/75 mb-1" }, "Virtual Account " + bank.name),
+        e(
+          "div",
+          { className: "flex items-center justify-between" },
+          e("h4", { className: "text-[21px] font-extrabold tracking-widest" }, vaNumber),
+          e(
+            "button",
+            { onClick: function () { onCopy(vaNumber); }, className: "flex items-center gap-1.5 bg-white/20 px-3 py-2 rounded-xl text-[12px] font-semibold no-tap-zoom" },
+            e(Icon, { name: "copy", size: 13 }),
+            "Copy"
+          )
+        )
+      ),
+      e(
+        "div",
+        { className: "rounded-3xl bg-slate-50 dark:bg-white/[0.05] p-4 mb-5 flex items-center justify-between" },
+        e("span", { className: "text-[13px] text-slate-500 dark:text-slate-400 font-medium" }, "Total Pembayaran"),
+        e("span", { className: "text-[17px] font-extrabold text-slate-800 dark:text-white" }, formatRupiah(amount))
+      ),
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Cara Pembayaran (m-Banking)"),
+      e(
+        "ol",
+        { className: "space-y-2.5 mb-2" },
+        [
+          "Buka aplikasi m-Banking " + bank.name,
+          "Pilih menu Transfer > Virtual Account",
+          "Masukkan nomor Virtual Account di atas",
+          "Periksa detail pembayaran, lalu konfirmasi",
+          "Masukkan PIN dan selesaikan transaksi"
+        ].map(function (step, i) {
+          return e(
+            "li",
+            { key: i, className: "flex items-start gap-3" },
+            e("span", { className: "w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-400/15 text-brand-700 dark:text-brand-300 text-[12px] font-bold flex items-center justify-center shrink-0 mt-0.5" }, i + 1),
+            e("span", { className: "text-[13.5px] text-slate-600 dark:text-slate-300 leading-snug" }, step)
+          );
+        })
+      )
+    );
+  }
+
+  function QRISStep(props) {
+    var amount = props.amount, secondsLeft = props.secondsLeft;
+    var mm = Math.floor(secondsLeft / 60), ss = secondsLeft % 60;
+    var pct = Math.max(0, secondsLeft / 300);
+    return e(
+      "div",
+      { className: "flex flex-col items-center" },
+      e(
+        "div",
+        { className: "w-full rounded-3xl bg-slate-50 dark:bg-white/[0.05] p-4 mb-4 flex items-center justify-between" },
+        e("span", { className: "text-[13px] text-slate-500 dark:text-slate-400 font-medium" }, "Total Pembayaran"),
+        e("span", { className: "text-[17px] font-extrabold text-slate-800 dark:text-white" }, formatRupiah(amount))
+      ),
+      e(
+        "div",
+        { className: "relative w-56 h-56 mb-4 rounded-3xl border-2 border-brand-500/70 p-3 bg-white shadow-ios-lg" },
+        e("div", { className: "absolute -top-1 -left-1 w-7 h-7 border-t-4 border-l-4 border-brand-500 rounded-tl-2xl" }),
+        e("div", { className: "absolute -top-1 -right-1 w-7 h-7 border-t-4 border-r-4 border-brand-500 rounded-tr-2xl" }),
+        e("div", { className: "absolute -bottom-1 -left-1 w-7 h-7 border-b-4 border-l-4 border-brand-500 rounded-bl-2xl" }),
+        e("div", { className: "absolute -bottom-1 -right-1 w-7 h-7 border-b-4 border-r-4 border-brand-500 rounded-br-2xl" }),
+        e(QRPattern, null),
+        e(
+          "div",
+          { className: "absolute inset-0 flex items-center justify-center" },
+          e("div", { className: "w-11 h-11 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md border-4 border-white" }, e(Icon, { name: "qrcode", size: 18, strokeWidth: 2 }))
+        )
+      ),
+      e(
+        "div",
+        { className: "flex items-center gap-2 mb-1" },
+        e(Icon, { name: "clock", size: 15, className: secondsLeft < 60 ? "text-red-500" : "text-brand-600 dark:text-brand-300" }),
+        e(
+          "span",
+          { className: cn("text-sm sm:text-[15px] font-bold tabular-nums", secondsLeft < 60 ? "text-red-500" : "text-slate-800 dark:text-white") },
+          (mm < 10 ? "0" + mm : mm) + ":" + (ss < 10 ? "0" + ss : ss)
+        )
+      ),
+      e("p", { className: "text-[12px] text-slate-500 dark:text-slate-400 mb-4" }, "Selesaikan pembayaran sebelum waktu habis"),
+      e("div", { className: "w-full h-1.5 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden mb-1" }, e("div", { className: "h-full bg-brand-500 transition-all duration-1000 ease-linear rounded-full", style: { width: (pct * 100) + "%" } })),
+      e("p", { className: "text-[12.5px] text-slate-500 dark:text-slate-400 text-center mt-3" }, "Buka aplikasi e-wallet atau m-Banking apapun, pilih Scan QRIS, lalu arahkan kamera ke kode di atas.")
+    );
+  }
+
+  function QRPattern() {
+    // deterministic pseudo-QR grid, purely decorative
+    var cells = [];
+    var seed = 42;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    var size = 14;
+    for (var r = 0; r < size; r++) {
+      for (var c = 0; c < size; c++) {
+        var onEdge = r < 3 && c < 3 || r < 3 && c > size - 4 || r > size - 4 && c < 3;
+        var fill = onEdge ? (r === 1 || c === 1 || r === size - 2 || c === size - 2 ? true : (r + c) % 2 === 0) : rnd() > 0.56;
+        if (fill) cells.push(e("rect", { key: r + "-" + c, x: c * (100 / size), y: r * (100 / size), width: 100 / size, height: 100 / size, rx: 0.6 }));
+      }
+    }
+    return e("svg", { viewBox: "0 0 100 100", className: "absolute inset-3 text-slate-800", fill: "currentColor" }, cells);
+  }
+
+  function TellerStep(props) {
+    var amount = props.amount, code = props.code;
+    return e(
+      "div",
+      null,
+      e(
+        "div",
+        { className: "rounded-3xl mesh-card p-5 mb-5 text-white text-center" },
+        e("p", { className: "text-[12px] text-white/75 mb-1" }, "Kode Pembayaran"),
+        e("h4", { className: "text-[26px] font-extrabold tracking-widest" }, code),
+        e("p", { className: "text-[12px] text-white/70 mt-1" }, "Tunjukkan kode ini ke kasir")
+      ),
+      e(
+        "div",
+        { className: "rounded-3xl bg-slate-50 dark:bg-white/[0.05] p-4 mb-5 flex items-center justify-between" },
+        e("span", { className: "text-[13px] text-slate-500 dark:text-slate-400 font-medium" }, "Total Pembayaran"),
+        e("span", { className: "text-[17px] font-extrabold text-slate-800 dark:text-white" }, formatRupiah(amount))
+      ),
+      e("p", { className: "text-[13px] font-semibold text-slate-500 dark:text-slate-400 mb-2.5" }, "Gerai Terdekat"),
+      e(
+        "div",
+        { className: "space-y-2.5" },
+        data.TELLER_LOCATIONS.map(function (loc, i) {
+          return e(
+            "div",
+            { key: i, className: "flex items-center gap-3 p-4 rounded-3xl bg-white dark:bg-white/[0.05] border border-slate-200/70 dark:border-white/10 shadow-ios" },
+            e("span", { className: "w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0" }, e(Icon, { name: "mappin", size: 17 })),
+            e(
+              "div",
+              { className: "flex-1" },
+              e("p", { className: "text-[13.5px] font-bold text-slate-800 dark:text-white" }, loc.name),
+              e("p", { className: "text-[12px] text-slate-500 dark:text-slate-400" }, loc.desc)
+            ),
+            e("span", { className: "text-[11.5px] text-slate-400 font-medium shrink-0" }, loc.distance)
+          );
+        })
+      )
+    );
+  }
+
+  function LoadingOverlay() {
+    return e(
+      "div",
+      { className: "fixed inset-0 z-[90] flex items-center justify-center bg-white/85 dark:bg-[#06100E]/90 anim-fade-in" },
+      e(
+        "div",
+        { className: "flex flex-col items-center" },
+        e("div", { className: "w-16 h-16 rounded-full border-[3px] border-brand-100 dark:border-white/10 border-t-brand-600 anim-spin mb-5" }),
+        e("p", { className: "font-bold text-slate-700 dark:text-white text-sm sm:text-[15px]" }, "Memproses Pembayaran..."),
+        e("p", { className: "text-[12.5px] text-slate-500 dark:text-slate-400 mt-1" }, "Mohon tunggu sebentar")
+      )
+    );
+  }
+
+  function methodLabel(method, bank) {
+    if (method === "va") return "Virtual Account " + (bank ? bank.name : "");
+    if (method === "qris") return "QRIS";
+    return "Teller / Kasir";
+  }
+
+  function ReceiptScreen(props) {
+    var tx = props.tx, onDone = props.onDone, onCopy = props.onCopy;
+
+    function handlePrint() { window.print(); }
+
+    function handleDownloadPdf() {
+      try {
+        var JsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+        if (!JsPDFCtor) { onCopy("PDF generator belum siap, coba lagi", "error"); return; }
+        var doc = new JsPDFCtor({ unit: "pt", format: [320, 520] });
+        var pageW = 320;
+        doc.setFillColor(13, 127, 104);
+        doc.rect(0, 0, pageW, 70, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("BayarKita", 24, 32);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Struk Pembayaran Digital", 24, 48);
+
+        doc.setTextColor(30, 41, 38);
+        var y = 96;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(tx.title, 24, y);
+        y += 16;
+        doc.setDrawColor(226, 232, 230);
+        doc.line(24, y, pageW - 24, y);
+        y += 20;
+
+        function row(label, value, bold) {
+          doc.setFont("helvetica", bold ? "bold" : "normal");
+          doc.setFontSize(bold ? 12 : 10);
+          doc.setTextColor(bold ? 13 : 100, bold ? 127 : 110, bold ? 104 : 108);
+          doc.text(label, 24, y);
+          doc.setTextColor(30, 41, 38);
+          doc.text(String(value), pageW - 24, y, { align: "right" });
+          y += bold ? 22 : 18;
+        }
+
+        row("ID Transaksi", tx.id);
+        row("Tanggal", tx.dateLabel);
+        row("Layanan", tx.subtitle);
+        row("Metode Bayar", tx.methodLabel);
+        row("Jumlah", "Rp" + tx.amount.toLocaleString("id-ID"));
+        row("Biaya Admin", "Rp" + tx.adminFee.toLocaleString("id-ID"));
+        doc.setDrawColor(226, 232, 230);
+        doc.line(24, y, pageW - 24, y);
+        y += 18;
+        row("Total Bayar", "Rp" + tx.total.toLocaleString("id-ID"), true);
+
+        y += 10;
+        doc.setFillColor(234, 251, 244);
+        doc.roundedRect(24, y, pageW - 48, 28, 6, 6, "F");
+        doc.setTextColor(13, 127, 104);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("BERHASIL", pageW / 2, y + 18, { align: "center" });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(140, 150, 148);
+        doc.text("Terima kasih telah menggunakan BayarKita", pageW / 2, 500, { align: "center" });
+
+        doc.save("Struk-" + tx.id + ".pdf");
+        onCopy("Struk berhasil diunduh", "success");
+      } catch (err) {
+        onCopy("Gagal membuat PDF", "error");
+      }
+    }
+
+    return e(
+      "div",
+      { className: "fixed inset-0 z-[95] bg-[#EFF4F2] dark:bg-[#06100E] flex flex-col safe-top safe-bottom" },
+      e(
+        "div",
+        { className: "flex-1 overflow-y-auto px-4 sm:px-5 pt-8 pb-4 flex flex-col items-center" },
+        e(
+          "div",
+          { className: "w-20 h-20 rounded-full bg-brand-100 dark:bg-brand-400/15 flex items-center justify-center text-brand-600 dark:text-brand-300 mb-4 anim-pop" },
+          e(Icon, { name: "checkcircle", size: 38, strokeWidth: 1.6 })
+        ),
+        e("h2", { className: "text-[19px] font-extrabold text-slate-800 dark:text-white mb-1" }, "Transaksi Berhasil"),
+        e("p", { className: "text-[13px] text-slate-500 dark:text-slate-400 mb-6" }, "Pembayaran kamu telah diproses"),
+        e(
+          "div",
+          { id: "receipt-print-area", className: "w-full bg-white dark:bg-white/[0.05] rounded-4xl shadow-ios-lg border border-slate-200/70 dark:border-white/10 p-5" },
+          e(
+            "div",
+            { className: "flex items-center gap-3 pb-4 mb-4 border-b border-dashed border-slate-200 dark:border-white/10" },
+            e("span", { className: "w-11 h-11 rounded-full bg-brand-50 dark:bg-brand-400/10 flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0" }, e(Icon, { name: tx.icon, size: 20 })),
+            e(
+              "div",
+              null,
+              e("p", { className: "text-[14.5px] font-bold text-slate-800 dark:text-white" }, tx.title),
+              e("p", { className: "text-[12px] text-slate-500 dark:text-slate-400" }, tx.subtitle)
+            )
+          ),
+          e(
+            "div",
+            { className: "space-y-2.5 mb-4" },
+            e(ReceiptRow, { label: "ID Transaksi", value: tx.id }),
+            e(ReceiptRow, { label: "Tanggal", value: tx.dateLabel }),
+            e(ReceiptRow, { label: "Metode Bayar", value: tx.methodLabel }),
+            e(ReceiptRow, { label: "Jumlah", value: formatRupiah(tx.amount) }),
+            e(ReceiptRow, { label: "Biaya Admin", value: formatRupiah(tx.adminFee) })
+          ),
+          e("div", { className: "h-px bg-slate-200 dark:bg-white/10 mb-4" }),
+          e(
+            "div",
+            { className: "flex items-center justify-between mb-4" },
+            e("span", { className: "text-[13.5px] font-bold text-slate-700 dark:text-slate-200" }, "Total Bayar"),
+            e("span", { className: "text-[19px] font-extrabold text-brand-700 dark:text-brand-300" }, formatRupiah(tx.total))
+          ),
+          e(ui.Badge, { tone: "success" }, "Status: Berhasil")
+        ),
+        e(
+          "div",
+          { className: "w-full grid grid-cols-2 gap-3 mt-5" },
+          e(
+            "button",
+            { onClick: handlePrint, className: "flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[13.5px] bg-white dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 shadow-ios no-tap-zoom" },
+            e(Icon, { name: "printer", size: 16 }),
+            "Cetak Struk"
+          ),
+          e(
+            "button",
+            { onClick: handleDownloadPdf, className: "flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-[13.5px] bg-brand-600 text-white shadow-ios no-tap-zoom" },
+            e(Icon, { name: "download", size: 16 }),
+            "Download PDF"
+          )
+        )
+      ),
+      e(
+        "div",
+        { className: "px-4 sm:px-5 pb-5 pt-2" },
+        e("button", { onClick: onDone, className: "w-full py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-[15px] bg-slate-800 dark:bg-white/10 text-white active:scale-[0.98] no-tap-zoom" }, "Selesai")
+      )
+    );
+  }
+
+  function ReceiptRow(props) {
+    return e(
+      "div",
+      { className: "flex items-center justify-between" },
+      e("span", { className: "text-[12.5px] text-slate-500 dark:text-slate-400" }, props.label),
+      e("span", { className: "text-[13px] font-semibold text-slate-800 dark:text-white text-right" }, props.value)
+    );
+  }
+
+  function PaymentFlow(props) {
+    var open = props.open, ctx = props.ctx, onClose = props.onClose, onSuccess = props.onSuccess, toast = props.toast;
+
+    var stepState = useState("method");
+    var step = stepState[0], setStep = stepState[1];
+    var bankState = useState(null);
+    var bank = bankState[0], setBank = bankState[1];
+    var vaNumberState = useState("");
+    var vaNumber = vaNumberState[0], setVaNumber = vaNumberState[1];
+    var codeState = useState("");
+    var code = codeState[0], setCode = codeState[1];
+    var secondsState = useState(300);
+    var secondsLeft = secondsState[0], setSecondsLeft = secondsState[1];
+    var phaseState = useState("sheet");
+    var phase = phaseState[0], setPhase = phaseState[1];
+    var txState = useState(null);
+    var tx = txState[0], setTx = txState[1];
+
+    useEffect(function () {
+      if (open) {
+        setStep("method");
+        setBank(null);
+        setPhase("sheet");
+        setTx(null);
+        setSecondsLeft(300);
+      }
+    }, [open, ctx && ctx.__key]);
+
+    var timerRef = useRef(null);
+    useEffect(function () {
+      if (step === "qris" && phase === "sheet") {
+        timerRef.current = setInterval(function () {
+          setSecondsLeft(function (s) { return s > 0 ? s - 1 : 0; });
+        }, 1000);
+        return function () { clearInterval(timerRef.current); };
+      }
+    }, [step, phase]);
+
+    if (!open || !ctx) return null;
+
+    function handleSelectMethod(methodId) {
+      if (methodId === "va") { setStep("va-bank"); }
+      else if (methodId === "qris") { setSecondsLeft(300); setStep("qris"); }
+      else { setCode(generatePaymentCode()); setStep("teller"); }
+    }
+
+    function handleSelectBank(b) {
+      setBank(b);
+      setVaNumber(generateVANumber(b.prefix));
+      setStep("va-detail");
+    }
+
+    function handleCopy(text, kind) {
+      var isNumber = kind !== "info" && kind !== "error" && kind !== "success";
+      if (isNumber && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { toast("Nomor berhasil disalin", "success"); }).catch(function () { toast("Gagal menyalin nomor", "error"); });
+      } else if (!isNumber) {
+        toast(text, kind);
+      }
+    }
+
+    function handleBaySekarang() {
+      setPhase("loading");
+      setTimeout(function () {
+        var amount = ctx.amount;
+        var adminFee = ctx.adminFee || 0;
+        var method = step === "va-detail" ? "va" : step === "qris" ? "qris" : "teller";
+        var record = {
+          id: generateTrxId(),
+          icon: ctx.icon,
+          title: ctx.title,
+          subtitle: ctx.subtitle,
+          serviceKey: ctx.serviceKey,
+          amount: amount,
+          adminFee: adminFee,
+          total: amount + adminFee,
+          methodLabel: methodLabel(method, bank),
+          date: formatDateTime(new Date()),
+          dateLabel: formatDateTime(new Date())
+        };
+        setTx(record);
+        setPhase("receipt");
+        onSuccess(record);
+      }, 1500);
+    }
+
+    function handleDone() {
+      onClose();
+    }
+
+    if (phase === "loading") return e(LoadingOverlay, null);
+    if (phase === "receipt" && tx) return e(ReceiptScreen, { tx: tx, onDone: handleDone, onCopy: handleCopy });
+
+    var title = step === "method" ? "Pilih Pembayaran"
+      : step === "va-bank" ? "Virtual Account"
+      : step === "va-detail" ? "Virtual Account " + bank.name
+      : step === "qris" ? "Scan QRIS"
+      : "Bayar di Teller";
+
+    var onBack = step === "method" ? null
+      : function () {
+          if (step === "va-bank") setStep("method");
+          else if (step === "va-detail") setStep("va-bank");
+          else setStep("method");
+        };
+
+    var footer = null;
+    if (step === "va-detail") footer = e(PayBar, { onClick: handleBaySekarang });
+    if (step === "qris") footer = e(PayBar, { onClick: handleBaySekarang });
+    if (step === "teller") footer = e(PayBar, { onClick: handleBaySekarang });
+
+    var body;
+    if (step === "method") body = e(MethodStep, { onSelect: handleSelectMethod, amount: ctx.amount + (ctx.adminFee || 0) });
+    else if (step === "va-bank") body = e(BankPickStep, { onSelect: handleSelectBank });
+    else if (step === "va-detail") body = e(VADetailStep, { bank: bank, vaNumber: vaNumber, amount: ctx.amount + (ctx.adminFee || 0), onCopy: function (num) { handleCopy(num, "va-copy"); } });
+    else if (step === "qris") body = e(QRISStep, { amount: ctx.amount + (ctx.adminFee || 0), secondsLeft: secondsLeft });
+    else if (step === "teller") body = e(TellerStep, { amount: ctx.amount + (ctx.adminFee || 0), code: code });
+
+    return e(SheetShell, { title: title, onBack: onBack, onClose: onClose, footer: footer }, body);
+  }
+
+  window.__BK__.PaymentFlow = PaymentFlow;
+})();
+
+/* ============================================================
+   ROOT APP
+   ============================================================ */
+(function () {
+  "use strict";
+  var h = window.__BK__.helpers;
+  var e = h.e, useState = h.useState, useEffect = h.useEffect, useRef = h.useRef, cn = h.classNames;
+  var timeGreeting = h.timeGreeting;
+  var BottomNav = window.__BK__.BottomNav;
+  var TopHeader = window.__BK__.TopHeader;
+  var HomeTab = window.__BK__.HomeTab;
+  var TagihanTab = window.__BK__.TagihanTab;
+  var SPPTab = window.__BK__.SPPTab;
+  var RiwayatTab = window.__BK__.RiwayatTab;
+  var PaymentFlow = window.__BK__.PaymentFlow;
+  var ToastStack = window.__BK__.ui.ToastStack;
+
+  var toastSeq = 0;
+
+  function App() {
+    var themeState = useState(function () {
+      if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return true;
+      return false;
+    });
+    var dark = themeState[0], setDark = themeState[1];
+
+    var tabState = useState("home");
+    var activeTab = tabState[0], setActiveTab = tabState[1];
+
+    var pendingServiceState = useState(null);
+    var pendingService = pendingServiceState[0], setPendingService = pendingServiceState[1];
+
+    var toastsState = useState([]);
+    var toasts = toastsState[0], setToasts = toastsState[1];
+
+    var historyState = useState([]);
+    var history = historyState[0], setHistory = historyState[1];
+
+    var paymentOpenState = useState(false);
+    var paymentOpen = paymentOpenState[0], setPaymentOpen = paymentOpenState[1];
+    var paymentCtxState = useState(null);
+    var paymentCtx = paymentCtxState[0], setPaymentCtx = paymentCtxState[1];
+
+    useEffect(function () {
+      var root = document.documentElement;
+      if (dark) root.classList.add("dark"); else root.classList.remove("dark");
+    }, [dark]);
+
+    function toast(message, type) {
+      var id = "t" + (++toastSeq);
+      setToasts(function (prev) { return prev.concat([{ id: id, message: message, type: type || "success" }]); });
+      setTimeout(function () {
+        setToasts(function (prev) { return prev.map(function (t) { return t.id === id ? Object.assign({}, t, { leaving: true }) : t; }); });
+        setTimeout(function () {
+          setToasts(function (prev) { return prev.filter(function (t) { return t.id !== id; }); });
+        }, 220);
+      }, 2400);
+    }
+
+    function handleQuickSelect(item) {
+      setActiveTab(item.tab);
+      if (item.service) setPendingService(item.service + ":" + Date.now());
+    }
+
+    function openPayment(ctx) {
+      ctx.__key = Date.now() + "-" + Math.random();
+      setPaymentCtx(ctx);
+      setPaymentOpen(true);
+    }
+
+    function closePayment() {
+      setPaymentOpen(false);
+      setTimeout(function () { setPaymentCtx(null); }, 250);
+    }
+
+    function handlePaySuccess(record) {
+      setHistory(function (prev) { return [record].concat(prev); });
+      toast("Transaksi berhasil", "success");
+    }
+
+    function clearHistory() {
+      setHistory([]);
+      toast("Riwayat transaksi dihapus", "info");
+    }
+
+    var initialServiceKey = null;
+    if (pendingService) initialServiceKey = pendingService.split(":")[0];
+
+    var h_ = window.__BK__.helpers.e;
+
+    return h_(
+      "div",
+      { id: "app-shell", className: "max-w-[480px] w-full mx-auto min-h-screen shadow-2xl overflow-x-hidden relative bg-[#EFF4F2] dark:bg-[#06100E] text-slate-800 dark:text-slate-100" },
+      h_(ToastStack, { toasts: toasts }),
+      h_(TopHeader, { dark: dark, onToggleTheme: function () { setDark(!dark); }, greeting: timeGreeting(), onBell: function () { toast("Belum ada notifikasi baru", "info"); } }),
+      h_(
+        "div",
+        { className: "pb-24" },
+        activeTab === "home" ? h_(HomeTab, { onQuickSelect: handleQuickSelect }) : null,
+        activeTab === "tagihan" ? h_(TagihanTab, { onPay: openPayment, toast: toast, initialService: initialServiceKey }) : null,
+        activeTab === "spp" ? h_(SPPTab, { onPay: openPayment, toast: toast }) : null,
+        activeTab === "riwayat" ? h_(RiwayatTab, { history: history, onClear: clearHistory }) : null
+      ),
+      h_(BottomNav, { active: activeTab, onChange: function (id) { setActiveTab(id); setPendingService(null); } }),
+      h_(PaymentFlow, { open: paymentOpen, ctx: paymentCtx, onClose: closePayment, onSuccess: handlePaySuccess, toast: toast })
+    );
+  }
+
+  var root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(React.createElement(App));
+})();
+
+</script>
+</body>
+</html>
